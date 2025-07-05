@@ -1,0 +1,65 @@
+# Configuración del servidor del Gateway
+server:
+  port: 8080 # El puerto donde escuchará el Gateway (cambiado para Docker)
+
+# Configuración de Spring Cloud Gateway
+spring:
+  application:
+    name: api-gateway # Nombre de nuestra aplicación Gateway
+  cloud:
+    gateway:
+      # Definición de las rutas
+      routes:
+        - id: auth_service_route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/**, /auth/**
+        - id: catalogo_service_route
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/v1/catalogo/**
+          filters:
+            - RewritePath=/api/v1/catalogo/(?<segment>.*), /api/v1/catalogo/${segment}
+        - id: sucursal_service_route
+          uri: http://localhost:8083
+          predicates:
+            - Path=/sucursal/**, /api/v1/sucursales/**
+          filters:
+            - RewritePath=/api/v1/sucursales/(?<segment>.*), /api/v1/sucursales/${segment}
+        - id: inventario_service_route
+          uri: http://localhost:8084
+          predicates:
+            - Path=/inventario/**, /api/v1/inventarios/**
+        - id: venta_service_route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/v1/ventas/**
+      # --- CONFIGURACIÓN DE CORS GLOBAL ---
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:63342"
+              - "http://localhost:8080"
+              - "http://127.0.0.1:5500"
+              - "http://localhost:5500"
+              - "http://localhost"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+
+            allowedHeaders: "*" # Permite todos los encabezados en las solicitudes CORS
+            allowCredentials: true # Permite el envío de cookies y credenciales en solicitudes CORS
+
+# ---------------------------------------------
+# Eureka es un servidor de descubrimiento de servicios de Spring Cloud Netflix.
+# Permite que los microservicios se registren y descubran entre sí dinámicamente,
+# eliminando la necesidad de usar URLs fijas. Cuando 'enabled' está en 'false',
+# este microservicio (el gateway) no se registra ni consulta servicios en Eureka.
+# ---------------------------------------------
+eureka:
+  client:
+    enabled: false # Desactiva el registro automático en Eureka (descubrimiento de servicios)
